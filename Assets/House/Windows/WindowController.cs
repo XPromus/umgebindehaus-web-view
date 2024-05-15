@@ -109,7 +109,7 @@ public class WindowController : MonoBehaviour
         }
     }
     
-    public void UseWindow(LeanSelect arg0)
+    public void UseWindow(GameObject o)
     {
         Debug.Log("Use Window");
         switch (windowState)

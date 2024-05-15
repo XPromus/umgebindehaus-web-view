@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Lean.Common;
 using Lean.Touch;
+using UnityEditor.Events;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UIElements;
 
 namespace House.Sorter
@@ -114,14 +116,15 @@ namespace House.Sorter
             controller.OpeningTime = 3f;
             controller.ShowDebugUI = true;
             
-            //TODO: Fix listeners
+            UnityAction<GameObject> action = controller.UseWindow;
+            
             var leftSelectable = leftPivot.AddComponent<LeanSelectableByFinger>();
-            leftSelectable.OnSelected.AddListener(controller.UseWindow);
-            leftSelectable.OnDeselected.AddListener(controller.UseWindow);
+            UnityEventTools.AddObjectPersistentListener(leftSelectable.OnSelected, action, leftPivot);
+            UnityEventTools.AddObjectPersistentListener(leftSelectable.OnDeselected, action, leftPivot);
             
             var rightSelectable = rightPivot.AddComponent<LeanSelectableByFinger>();
-            rightSelectable.OnSelected.AddListener(controller.UseWindow);
-            rightSelectable.OnDeselected.AddListener(controller.UseWindow);
+            UnityEventTools.AddObjectPersistentListener(rightSelectable.OnSelected, action, rightPivot);
+            UnityEventTools.AddObjectPersistentListener(rightSelectable.OnDeselected, action, rightPivot);
 
             var leftCollider = leftPivot.AddComponent<BoxCollider>();
             leftCollider.center = new Vector3(0f, -0.36f, -0.18f);
