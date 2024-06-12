@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class SortWindows : MonoBehaviour
 {
-
+    
     [Header("Settings")] 
     [SerializeField] private int[] windowsToSort;
     [SerializeField] private bool invertWindowsToSortList;
@@ -31,6 +31,12 @@ public class SortWindows : MonoBehaviour
                 sortWindowComponents.SortObjectsInWindow(windowParent);
             }
         }
+
+        foreach (var parent in windowParents)
+        {
+            ApplyLayerRecursively(parent);
+        }
+        
     }
 
     private List<GameObject> SortObjectsInScene(List<WindowToSort> list)
@@ -40,7 +46,7 @@ public class SortWindows : MonoBehaviour
         {
             var newObject = new GameObject
             {
-                name = windowToSort.Name.ToString(),
+                name = windowToSort.WindowName.ToString(),
                 transform =
                 {
                     parent = windowToSort.Parent
@@ -59,65 +65,74 @@ public class SortWindows : MonoBehaviour
     private List<WindowToSort> CreateWindowGroups(Transform parent)
     {
         var windowsToSortList = new List<WindowToSort>();
-        for (int i = 0; i < parent.childCount; i++)
+        parent.gameObject.layer = LayerMask.NameToLayer("Windows");
+        for (var i = 0; i < parent.childCount; i++)
         {
             var currentChild = parent.GetChild(i);
             var splitName = currentChild.name.Split("_");
             var windowNumber = Int32.Parse(splitName[1]);
 
-            if (sortAllWindows)
+            switch (sortAllWindows)
             {
-                var windowSortListCheck = WindowListContains(windowsToSortList, windowNumber);
-                if (windowSortListCheck.Item1)
-                {
-                    windowSortListCheck.Item2.AddElementToList(currentChild);
-                }
-                else
-                {
-                    var newWindowSortObject = new WindowToSort
+                case true:
+                    StartSort(windowsToSortList, windowNumber, currentChild, parent);
+                    break;
+                
+                case false:
+                    switch (invertWindowsToSortList)
                     {
-                        Parent = parent,
-                        Name = windowNumber
-                    };
-                    newWindowSortObject.AddElementToList(currentChild);
-                    windowsToSortList.Add(newWindowSortObject);
-                }
-            }
-            else
-            {
-                if (ArrayContains(windowsToSort, windowNumber))
-                {
-                    var windowSortListCheck = WindowListContains(windowsToSortList, windowNumber);
-                    if (windowSortListCheck.Item1)
-                    {
-                        windowSortListCheck.Item2.AddElementToList(currentChild);
+                        case true:
+                            if (ArrayDoesNotContain(windowsToSort, windowNumber))
+                            {
+                                StartSort(windowsToSortList, windowNumber, currentChild, parent);
+                            }
+                            break;
+                    
+                        case false:
+                            if (!invertWindowsToSortList && ArrayContains(windowsToSort, windowNumber))
+                            {
+                                StartSort(windowsToSortList, windowNumber, currentChild, parent);
+                            }
+                            break;
                     }
-                    else
-                    {
-                        var newWindowSortObject = new WindowToSort
-                        {
-                            Parent = parent,
-                            Name = windowNumber
-                        };
-                        newWindowSortObject.AddElementToList(currentChild);
-                        windowsToSortList.Add(newWindowSortObject);
-                    }
-                }
+                    break;
             }
         }
 
         return windowsToSortList;
     }
 
+    private void StartSort(
+        List<WindowToSort> windowsToSortList, 
+        int windowNumber, 
+        Transform currentChild,
+        Transform parent
+        )
+    {
+        var windowSortListCheck = WindowListContains(windowsToSortList, windowNumber);
+        if (windowSortListCheck.Item1)
+        {
+            windowSortListCheck.Item2.AddElementToList(currentChild);
+        }
+        else
+        {
+            var newWindowSortObject = new WindowToSort
+            {
+                Parent = parent,
+                WindowName = windowNumber
+            };
+            newWindowSortObject.AddElementToList(currentChild);
+            windowsToSortList.Add(newWindowSortObject);
+        }
+    }
+
     private List<Transform> GetWindowParentList(Transform house)
     {
-        List<Transform> windowParents = new List<Transform>();
-        var houseChildrenCount = house.childCount;
-        for (int i = 0; i < houseChildrenCount; i++)
+        var windowParents = new List<Transform>();
+        for (var i = 0; i < house.childCount; i++)
         {
             var currentFloor = house.GetChild(i);
-            var floorChildCount = currentFloor.childCount;
-            for (int j = 0; j < floorChildCount; j++)
+            for (var j = 0; j < currentFloor.childCount; j++)
             {
                 var currentObjectParent = currentFloor.GetChild(j);
                 if (currentObjectParent.name.Equals(windowParentObjectName))
@@ -135,11 +150,16 @@ public class SortWindows : MonoBehaviour
         return array.Any(t => t == number);
     }
 
+    private bool ArrayDoesNotContain(int[] array, int number)
+    {
+        return array.Any(t => t != number);
+    }
+
     private Tuple<bool, WindowToSort> WindowListContains(List<WindowToSort> list, int number)
     {
         foreach (var windowToSort in list)
         {
-            if (windowToSort.Name == number)
+            if (windowToSort.WindowName == number)
             {
                 return new Tuple<bool, WindowToSort>(true, windowToSort);
             }
@@ -148,32 +168,26 @@ public class SortWindows : MonoBehaviour
         return new Tuple<bool, WindowToSort>(false, null);
     }
 
+    private void ApplyLayerRecursively(Transform transform)
+    {
+        transform.gameObject.layer = LayerMask.NameToLayer("Windows");
+        for (var i = 0; i < transform.childCount; i++)
+        {
+            ApplyLayerRecursively(transform.GetChild(i));
+        }
+    }
+
     private class WindowToSort
     {
-        private Transform _parent;
-        public Transform Parent
-        {
-            get { return _parent; }
-            set { _parent = value; }
-        }
-        
-        private int _name;
-        public int Name
-        {
-            get { return _name; }
-            set { _name = value; }
-        }
-        
-        private List<Transform> _windowParts = new List<Transform>();
-        public List<Transform> WindowParts
-        {
-            get { return _windowParts; }
-            set {  }
-        }
+        public Transform Parent { get; set; }
+
+        public int WindowName { get; set; }
+
+        public List<Transform> WindowParts { get; set; } = new List<Transform>();
 
         public void AddElementToList(Transform element)
         {
-            _windowParts.Add(element);
+            WindowParts.Add(element);
         }
         
     }
