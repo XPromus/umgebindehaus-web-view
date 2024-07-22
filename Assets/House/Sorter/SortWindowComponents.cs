@@ -112,7 +112,7 @@ namespace House.Sorter
             controller.RotationAxisValue = WindowController.RotationAxis.Y;
             controller.OpeningDirectionValue = WindowController.OpeningDirection.INWARDS;
             controller.OpeningTime = 3f;
-            controller.ShowDebugUI = true;
+            controller.ShowDebugUI = false;
             
             UnityAction<GameObject> action = controller.UseWindow;
             

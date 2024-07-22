@@ -7,6 +7,10 @@ using UnityEngine;
 public class SortWindows : MonoBehaviour
 {
     
+    //TODO: Include windows and doors that have rotation or direction object. Remove manual list 
+    //TODO: Apply window materials automatically
+    //TODO: Regex for filtering
+    
     [Header("Settings")] 
     [SerializeField] private int[] windowsToSort;
     [SerializeField] private bool invertWindowsToSortList;

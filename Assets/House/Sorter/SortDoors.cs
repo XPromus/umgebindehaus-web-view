@@ -8,18 +8,25 @@ using UnityEngine;
 
 public class SortDoors : MonoBehaviour
 {
-
+    
     [Header("Settings")] 
     [SerializeField] private int[] doorsToSort;
     [SerializeField] private bool invertDoorsToSortList;
-    [SerializeField] private string doorParentObjectName;
+    //[SerializeField] private string doorParentObjectName;
+    
+    [Header("Doors to Sort")]
     private bool sortAllDoors;
+
+    private string[] doorTypes =
+    {
+        "Innentür"
+    };
 
     public void SortSelectedDoors(GameObject targetHouse)
     {
-        var doorParents = GetDoorParentList(targetHouse.transform);
+        var doorParentsInFloors = GetDoorParentList(targetHouse.transform);
         var doorsToSortLists = new List<List<DoorToSort>>();
-        foreach (var doorParent in doorParents)
+        foreach (var doorParent in doorParentsInFloors)
         {
             doorsToSortLists.Add(CreateDoorGroups(doorParent));
         }
@@ -32,6 +39,11 @@ public class SortDoors : MonoBehaviour
             {
                 sortDoorComponents.SortObjectsInDoor(doorParent);
             }
+        }
+
+        foreach (var doorParentsInFloor in doorParentsInFloors)
+        {
+            ApplyLayerRecursively(doorParentsInFloor);
         }
     }
 
@@ -61,7 +73,6 @@ public class SortDoors : MonoBehaviour
     private List<DoorToSort> CreateDoorGroups(Transform parent)
     {
         var doorsToSortList = new List<DoorToSort>();
-        parent.gameObject.layer = LayerMask.NameToLayer("Doors");
         for (var i = 0; i < parent.childCount; i++)
         {
             var currentChild = parent.GetChild(i);
@@ -126,7 +137,7 @@ public class SortDoors : MonoBehaviour
             for (var j = 0; j < floorChildCount; j++)
             {
                 var currentObjectParent = currentFloor.GetChild(j);
-                if (currentObjectParent.name.Equals(doorParentObjectName))
+                if (currentObjectParent.name.Equals(doorTypes[0]))
                 {
                     doorParents.Add(currentObjectParent);
                 }
@@ -157,6 +168,15 @@ public class SortDoors : MonoBehaviour
         }
 
         return new Tuple<bool, DoorToSort>(false, null);
+    }
+
+    private void ApplyLayerRecursively(Transform transform)
+    {
+        transform.gameObject.layer = LayerMask.NameToLayer("Doors");
+        for (var i = 0; i < transform.childCount; i++)
+        {
+            ApplyLayerRecursively(transform.GetChild(i));
+        }
     }
     
     private class DoorToSort

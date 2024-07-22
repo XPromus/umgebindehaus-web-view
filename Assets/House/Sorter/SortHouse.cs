@@ -45,11 +45,16 @@ public class SortHouse : MonoBehaviour {
 
     [Header("Requirements")] 
     [SerializeField] private SortWindows sortWindowsScript;
+    [SerializeField] private SortDoors sortDoorsScript;
 
     private void Awake()
     {
+        sortWindowsScript = GetComponent<SortWindows>();
+        sortDoorsScript = GetComponent<SortDoors>();
+        
         Sort();
         sortWindowsScript.SortSelectedWindows(targetHouse);
+        sortDoorsScript.SortSelectedDoors(targetHouse);
     }
     
     private void Sort()
